@@ -154,7 +154,6 @@ uv run python -m knowledge_search . smart-search "{{query}}" --limit 5
 ```
 
 Usage: Ask Claude to search your docs with natural language queries.
-```
 
 
 ### Development
