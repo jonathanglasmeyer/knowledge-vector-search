@@ -157,7 +157,7 @@ Usage: Ask Claude to search your docs with natural language queries.
 ```
 
 
-## Development
+### Development
 
 ```bash
 # Setup development environment
