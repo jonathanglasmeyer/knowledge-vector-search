@@ -1,7 +1,7 @@
 """Database operations for vector storage and retrieval."""
 
 import sqlite3
-import sqlite_vec
+import sqlite_vec  # type: ignore[import-untyped]
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 import json
@@ -15,18 +15,18 @@ class VectorDatabase:
     def __init__(self, db_path: Path):
         self.db_path = db_path
         self._ensure_directory()
-        self._conn = None
+        self._conn: Optional[sqlite3.Connection] = None
         self._initialize_database()
 
-    def _ensure_directory(self):
+    def _ensure_directory(self) -> None:
         """Ensure database directory exists."""
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
 
-    def _initialize_database(self):
+    def _initialize_database(self) -> None:
         """Initialize database connection and schema."""
         self._conn = sqlite3.connect(str(self.db_path))
         self._conn.enable_load_extension(True)
-        sqlite_vec.load(self._conn)
+        sqlite_vec.load(self._conn)  # type: ignore[attr-defined]
         self._conn.enable_load_extension(False)
 
         # Create optimized table schema
@@ -55,24 +55,25 @@ class VectorDatabase:
 
         self._conn.commit()
 
-    def close(self):
+    def close(self) -> None:
         """Close database connection."""
         if self._conn:
             self._conn.close()
             self._conn = None
 
-    def __enter__(self):
+    def __enter__(self) -> "VectorDatabase":
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         self.close()
 
     def insert_document(self, doc_info: DocumentInfo, embedding: List[float]) -> bool:
         """Insert or update a document in the database."""
         try:
-            embedding_blob = sqlite_vec.serialize_float32(embedding)
+            embedding_blob = sqlite_vec.serialize_float32(embedding)  # type: ignore[attr-defined]
             metadata_json = json.dumps(doc_info.metadata) if doc_info.metadata else None
 
+            assert self._conn is not None
             self._conn.execute(
                 """
                 INSERT OR REPLACE INTO documents 
@@ -94,6 +95,7 @@ class VectorDatabase:
                 ),
             )
 
+            assert self._conn is not None
             self._conn.commit()
             return True
 
@@ -104,8 +106,9 @@ class VectorDatabase:
     def search_similar(self, query_embedding: List[float], limit: int = 5) -> List[SearchResult]:
         """Search for similar documents using vector similarity."""
         try:
-            query_blob = sqlite_vec.serialize_float32(query_embedding)
+            query_blob = sqlite_vec.serialize_float32(query_embedding)  # type: ignore[attr-defined]
 
+            assert self._conn is not None
             results = self._conn.execute(
                 """
                 SELECT file_path, file_name, content_preview, metadata, folder, file_size,
@@ -146,6 +149,7 @@ class VectorDatabase:
     def get_document_hash(self, file_path: Path) -> Optional[str]:
         """Get the stored hash for a document."""
         try:
+            assert self._conn is not None
             result = self._conn.execute(
                 "SELECT file_hash FROM documents WHERE file_path = ?", (str(file_path),)
             ).fetchone()
@@ -158,6 +162,7 @@ class VectorDatabase:
     def document_exists(self, file_path: Path) -> bool:
         """Check if a document exists in the database."""
         try:
+            assert self._conn is not None
             result = self._conn.execute(
                 "SELECT COUNT(*) FROM documents WHERE file_path = ?", (str(file_path),)
             ).fetchone()
@@ -170,6 +175,7 @@ class VectorDatabase:
     def get_document_count(self) -> int:
         """Get total number of documents in the database."""
         try:
+            assert self._conn is not None
             result = self._conn.execute("SELECT COUNT(*) FROM documents").fetchone()
             return result[0] if result else 0
         except Exception:
@@ -178,6 +184,7 @@ class VectorDatabase:
     def remove_document(self, file_path: Path) -> bool:
         """Remove a document from the database."""
         try:
+            assert self._conn is not None
             self._conn.execute("DELETE FROM documents WHERE file_path = ?", (str(file_path),))
             self._conn.commit()
             return True

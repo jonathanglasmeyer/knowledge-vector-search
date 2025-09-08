@@ -3,10 +3,11 @@
 import argparse
 import sys
 from pathlib import Path
+from typing import Any
 from .search_engine import KnowledgeSearch
 
 
-def cmd_build(args):
+def cmd_build(args: Any) -> None:
     """Build or update the search index."""
     search = KnowledgeSearch(args.documents_path)
     stats = search.build_index(incremental=not args.full, batch_size=args.batch_size)
@@ -14,7 +15,7 @@ def cmd_build(args):
     print(f"\n✅ Index {'built' if not args.full else 'updated'} successfully!")
 
 
-def cmd_search(args):
+def cmd_search(args: Any) -> None:
     """Perform a search query."""
     search = KnowledgeSearch(args.documents_path)
     results = search.search(args.query, limit=args.limit)
@@ -33,7 +34,7 @@ def cmd_search(args):
         print()
 
 
-def cmd_smart_search(args):
+def cmd_smart_search(args: Any) -> None:
     """Smart search with automatic index updates."""
     search = KnowledgeSearch(args.documents_path)
     results = search.smart_search(args.query, limit=args.limit, auto_update=not args.no_update)
@@ -52,7 +53,7 @@ def cmd_smart_search(args):
         print()
 
 
-def cmd_stats(args):
+def cmd_stats(args: Any) -> None:
     """Show database statistics."""
     search = KnowledgeSearch(args.documents_path)
     stats = search.get_stats()
@@ -70,7 +71,7 @@ def cmd_stats(args):
         print("✅ Database is up to date")
 
 
-def main():
+def main() -> None:
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
         description="Knowledge Vector Search - Semantic search for document collections"

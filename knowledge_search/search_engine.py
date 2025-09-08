@@ -22,8 +22,8 @@ class KnowledgeSearch:
         self.model_name = model_name
 
         # Lazy initialization
-        self._embeddings = None
-        self._indexer = None
+        self._embeddings: Optional[HuggingFaceEmbeddings] = None
+        self._indexer: Optional[DocumentIndexer] = None
 
     @property
     def embeddings(self) -> HuggingFaceEmbeddings:
@@ -95,7 +95,7 @@ class KnowledgeSearch:
         db_mtime = self.db_path.stat().st_mtime
 
         # Find newest document
-        newest_doc_time = 0
+        newest_doc_time = 0.0
         for ext in [".md", ".txt", ".markdown"]:
             for doc_path in self.documents_path.rglob(f"**/*{ext}"):
                 if not self.indexer.processor.should_skip_file(doc_path):

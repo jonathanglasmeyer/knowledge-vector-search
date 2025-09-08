@@ -39,10 +39,10 @@ class DocumentIndexer:
             "skipped": 0,
             "errors": 0,
             "total_size": 0,
-            "start_time": None,
+            "start_time": 0.0,
         }
 
-    def _find_documents(self, extensions: List[str] = None) -> List[Path]:
+    def _find_documents(self, extensions: Optional[List[str]] = None) -> List[Path]:
         """Find all documents to index."""
         if extensions is None:
             extensions = [".md", ".txt", ".markdown"]
@@ -102,7 +102,8 @@ class DocumentIndexer:
         """Build or update the document index."""
         print(f"🔍 {'Incremental' if incremental else 'Full'} indexing: {self.documents_path}")
 
-        self.stats["start_time"] = time.time()
+        start_time = time.time()
+        self.stats["start_time"] = start_time
         documents = self._find_documents()
 
         print(f"📄 Found {len(documents)} potential documents")
@@ -134,13 +135,13 @@ class DocumentIndexer:
                 )
 
         # Print final statistics
-        elapsed_time = time.time() - self.stats["start_time"]
+        elapsed_time = time.time() - start_time
 
         print(f"\n📊 Indexing complete!")
         print(f"   ✅ Processed: {self.stats['processed']} documents")
         print(f"   ⏭️  Skipped: {self.stats['skipped']} documents")
         print(f"   ❌ Errors: {self.stats['errors']} documents")
-        print(f"   💾 Total size: {self.stats['total_size'] / 1024 / 1024:.1f} MB")
+        print(f"   💾 Total size: {self.stats['total_size'] / (1024 * 1024):.1f} MB")
         print(f"   ⏱️  Time: {elapsed_time:.1f}s")
 
         return {
@@ -151,7 +152,7 @@ class DocumentIndexer:
             "elapsed_time": elapsed_time,
         }
 
-    def _process_batch(self, batch: List[DocumentInfo], db: VectorDatabase):
+    def _process_batch(self, batch: List[DocumentInfo], db: VectorDatabase) -> None:
         """Process a batch of documents."""
         if not batch:
             return
@@ -165,7 +166,7 @@ class DocumentIndexer:
             for doc_info, embedding in zip(batch, embeddings):
                 if db.insert_document(doc_info, embedding):
                     self.stats["processed"] += 1
-                    self.stats["total_size"] += doc_info.file_size
+                    self.stats["total_size"] += doc_info.file_size or 0
                 else:
                     self.stats["errors"] += 1
 

@@ -54,8 +54,17 @@ This is **bold** and *italic* text with `code`.
         processor = DocumentProcessor()
         preview = processor.create_preview(content, max_length=50)
 
+        # Preview should not exceed max_length significantly (accounting for "..." or sentence endings)
         assert len(preview) <= 53  # 50 + "..."
-        assert preview.endswith("...") or len(content) <= 50
+
+        # Test short content (should return as-is)
+        short_content = "Short text."
+        short_preview = processor.create_preview(short_content, max_length=50)
+        assert short_preview == short_content
+        assert not short_preview.endswith("...")
+
+        # Test that long content gets truncated
+        assert len(preview) < len(content)  # Should be shorter than original
 
 
 class TestEmbeddings:

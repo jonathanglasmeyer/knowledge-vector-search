@@ -1,7 +1,7 @@
 """FastEmbed ONNX Neural Embeddings for Vector Search."""
 
 import numpy as np
-from typing import List
+from typing import List, Optional, Any
 from pathlib import Path
 
 
@@ -10,10 +10,10 @@ class ONNXEmbeddings:
 
     def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2"):
         self.model_name = model_name
-        self._model = None
+        self._model: Optional[Any] = None
         self._initialized = False
 
-    def _ensure_initialized(self):
+    def _ensure_initialized(self) -> None:
         """Lazy initialization of the embedding model."""
         if self._initialized:
             return
@@ -40,6 +40,7 @@ class ONNXEmbeddings:
 
         try:
             # FastEmbed returns generator, convert to list
+            assert self._model is not None
             embeddings = list(self._model.embed(texts))
             # Convert numpy arrays to lists for consistency
             return [emb.tolist() if hasattr(emb, "tolist") else list(emb) for emb in embeddings]
@@ -54,6 +55,7 @@ class ONNXEmbeddings:
 
         try:
             # FastEmbed expects list, returns generator
+            assert self._model is not None
             embeddings = list(self._model.embed([text]))
             if embeddings:
                 embedding = embeddings[0]
@@ -70,7 +72,7 @@ class ONNXEmbeddings:
 class HuggingFaceEmbeddings:
     """ONNX-optimized drop-in replacement using FastEmbed."""
 
-    def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2", **kwargs):
+    def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2", **kwargs: Any):
         self.model_name = model_name
         self.embeddings = ONNXEmbeddings(model_name)
 
