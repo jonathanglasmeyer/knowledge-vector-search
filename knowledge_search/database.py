@@ -1,12 +1,23 @@
 """Database operations for vector storage and retrieval."""
 
 import sqlite3
+from datetime import date, datetime
+
 import sqlite_vec  # type: ignore[import-untyped]
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 import json
 import time
 from .types import SearchResult, DocumentInfo
+
+
+class DateTimeEncoder(json.JSONEncoder):
+    """Custom JSON encoder that handles datetime objects."""
+    
+    def default(self, obj: Any) -> Any:
+        if isinstance(obj, (date, datetime)):
+            return obj.isoformat()
+        return super().default(obj)
 
 
 class VectorDatabase:
@@ -71,7 +82,7 @@ class VectorDatabase:
         """Insert or update a document in the database."""
         try:
             embedding_blob = sqlite_vec.serialize_float32(embedding)  # type: ignore[attr-defined]
-            metadata_json = json.dumps(doc_info.metadata) if doc_info.metadata else None
+            metadata_json = json.dumps(doc_info.metadata, cls=DateTimeEncoder) if doc_info.metadata else None
 
             assert self._conn is not None
             self._conn.execute(
